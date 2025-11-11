@@ -1,24 +1,23 @@
 use std::collections::HashMap;
 
-mod sample;
+pub mod sample;
 
 pub struct TranslationUnit {
     pub name: String,
-    pub functions: HashMap<String, Function>,
-    pub entrypoint: String
+    pub functions: HashMap<String, Function>
 }
 
 pub struct Function {
     pub name: String,
-    pub start_block: Block
+    pub start_block: Box<Block>
 }
 
 pub struct Block { 
-    pub statements: Vec<Statement>, 
+    pub instructions: Vec<Instruction>,
     pub terminator: Terminator 
 }
 
-pub enum Statement {
+pub enum Instruction {
     Asm(Vec<u8>)
 }
 

@@ -1,11 +1,30 @@
+use std::collections::HashMap;
 use std::fs::write;
 
 mod ir;
 mod linking;
+mod codegen;
+mod outputs;
 
-use linking::elf::*;
+use crate::outputs::elf::*;
+use crate::outputs::serialization::*;
+use crate::codegen::Codegen;
+use crate::codegen::x64_elf::CompilerX64Elf;
+use crate::ir::sample::get_example_translation_unit;
 
 fn main() {
+    let mut elf_compiler = CompilerX64Elf {
+        function_sizes: HashMap::new(),
+        function_positions: HashMap::new()
+    };
+
+    let elf = elf_compiler.compile_translation_unit(get_example_translation_unit());
+
+    write("a.o", elf.serialize(false)).expect("file write shit fuck");
+    println!("written program to a.o");
+}
+
+fn old_main() {
 
     println!("Hello, world!");
     let mut elf = ElfHeader {
