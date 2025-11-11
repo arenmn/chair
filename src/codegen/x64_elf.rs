@@ -54,7 +54,7 @@ impl Codegen for CompilerX64Elf {
             text.extend(compiled_function);
         }
 
-        let mut section_names: Vec<String> = vec!["".to_owned(), ".text".to_owned(), ".shstrtab".to_owned(), ".symtab".to_owned(), ".strtab".to_owned()];
+        let section_names: Vec<String> = vec!["".to_owned(), ".text".to_owned(), ".shstrtab".to_owned(), ".symtab".to_owned(), ".strtab".to_owned()];
 
         let mut elf = ElfFile {
             elf_header: ElfHeader {
