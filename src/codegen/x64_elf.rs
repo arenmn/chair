@@ -15,15 +15,15 @@ impl CompilerX64Elf {
             |instruction| self.compile_instruction(instruction)
         ).collect();
 
-        x.extend(self.compile_terminator(&block.terminator));
+        x.extend(self.compile_terminator(block.terminator.clone().expect("Attempt to compile block with no terminator")));
 
         x
     }
 
-    fn compile_terminator(&mut self, terminator: &Terminator) -> Vec<u8> {
+    fn compile_terminator(&mut self, terminator: Terminator) -> Vec<u8> {
         match terminator {
             Terminator::Return => {vec![0xC3]},
-            Terminator::Jump(_) => {vec![]}
+            Terminator::Jump(_) => {vec![]},
         }
     }
 
