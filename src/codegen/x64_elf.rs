@@ -10,6 +10,11 @@ pub struct CompilerX64Elf {
 }
 
 impl CompilerX64Elf {
+
+    pub fn new() -> CompilerX64Elf {
+        CompilerX64Elf { function_positions: HashMap::new(), function_sizes: HashMap::new() }
+    }
+
     fn compile_block(&mut self, block: &Block) -> Vec<u8> {
         let mut x: Vec<u8> = block.instructions.iter().flat_map(
             |instruction| self.compile_instruction(instruction)
