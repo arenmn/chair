@@ -1,7 +1,8 @@
 use crate::ir::{Block, Function, Instruction, Terminator, TranslationUnit};
 
-fn get_example_function() -> Function {
-
+pub fn get_example_translation_unit() -> TranslationUnit {
+    let mut translation_unit = TranslationUnit::new("cook");
+    
     let mut block = Block::new();
 
     block.add_instruction(Instruction::Asm(vec![
@@ -22,15 +23,7 @@ fn get_example_function() -> Function {
     ]));
 
     block.set_terminator(Terminator::Return);
-
-    Function::new("_start", block)
-
-}
-
-pub fn get_example_translation_unit() -> TranslationUnit {
-    let mut translation_unit = TranslationUnit::new("cook");
-    let my_func = get_example_function();
-    translation_unit.add_function(my_func);
+    translation_unit.add_function(Function::new("_start", block));
 
     translation_unit
 }

@@ -47,3 +47,9 @@ impl Serializable for String {
         self.len() + 1
     }
 }
+
+impl<T: Serializable> Serializable for Vec<T> {
+    fn serialize(&self, be: bool) -> Vec<u8> {
+        self.iter().flat_map(|x| x.serialize(be)).collect()
+    }
+}

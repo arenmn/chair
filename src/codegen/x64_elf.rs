@@ -6,39 +6,50 @@ use crate::outputs::serialization::Serializable;
 
 pub struct CompilerX64Elf {
     pub(crate) function_positions: HashMap<String, usize>,
-    pub(crate) function_sizes: HashMap<String, usize>
+    pub(crate) function_sizes: HashMap<String, usize>,
+    pub(crate) text: Vec<u8>
 }
 
 impl CompilerX64Elf {
 
     pub fn new() -> CompilerX64Elf {
-        CompilerX64Elf { function_positions: HashMap::new(), function_sizes: HashMap::new() }
+        CompilerX64Elf { 
+            function_positions: HashMap::new(), 
+            function_sizes: HashMap::new(),
+            text: vec![]
+        }
     }
 
-    fn compile_block(&mut self, block: &Block) -> Vec<u8> {
-        let mut x: Vec<u8> = block.instructions.iter().flat_map(
-            |instruction| self.compile_instruction(instruction)
-        ).collect();
+    fn compile_block(&mut self, block: &Block) {
+        for instr in block.instructions.iter() {
+            self.compile_instruction(instr);
+        }
 
-        x.extend(self.compile_terminator(block.terminator.clone().expect("Attempt to compile block with no terminator")));
+        self.compile_terminator(block.terminator.clone().expect("Attempt to compile block with no terminator"));
 
-        x
     }
 
-    fn compile_terminator(&mut self, terminator: Terminator) -> Vec<u8> {
+    fn compile_terminator(&mut self, terminator: Terminator) {
         match terminator {
-            Terminator::Return => {vec![0xC3]},
-            Terminator::Jump(_) => {vec![]},
+            Terminator::Return => {
+                self.text.extend(vec![0xC3]);
+            },
+            Terminator::Jump(_) => {
+                let vec: Vec<u8> = Vec::new();
+                self.text.extend(vec);
+            },
         }
     }
 
-    fn compile_instruction(&mut self, instruction: &Instruction) -> Vec<u8> {
+    fn compile_instruction(&mut self, instruction: &Instruction) {
         match instruction {
-            Instruction::Asm(x) => x.clone()
+            Instruction::Asm(x) => {
+                self.text.extend(x)
+            }
         }
     }
 
-    fn compile_function(&mut self, function: &Function) -> Vec<u8> {
+    fn compile_function(&mut self, function: &Function) {
         self.compile_block(&*function.start_block)
     }
 }
@@ -46,17 +57,13 @@ impl CompilerX64Elf {
 impl Codegen for CompilerX64Elf {
     type OutputFormat = ElfFile;
     fn compile_translation_unit(&mut self, translation_unit: TranslationUnit) -> ElfFile {
-        let mut text: Vec<u8> = vec![];
-
         for (name, func) in &translation_unit.functions {
-            let compiled_function = self.compile_function(&func);
 
-            let function_start = text.len();
+            let function_start = self.text.len();
+            self.compile_function(&func);
 
             self.function_positions.insert(name.to_string(), function_start);
-            self.function_sizes.insert(name.to_string(), compiled_function.len());
-
-            text.extend(compiled_function);
+            self.function_sizes.insert(name.to_string(), self.text.len());
         }
 
         let section_names: Vec<String> = vec!["".to_owned(), ".text".to_owned(), ".shstrtab".to_owned(), ".symtab".to_owned(), ".strtab".to_owned()];
@@ -104,7 +111,7 @@ impl Codegen for CompilerX64Elf {
                     sh_flags: 2 | 4,
                     sh_addr: 0x40000000,
                     sh_offset: 0x80,
-                    sh_size: text.len() as u64,
+                    sh_size: self.text.len() as u64,
                     sh_link: 0,
                     sh_info: 0,
                     sh_addralign: 0,
@@ -155,7 +162,7 @@ impl Codegen for CompilerX64Elf {
         let header_len = elf.serialized_length();
         elf.elf_section_headers[1].sh_offset = header_len as u64;
 
-        elf.data.extend(text);
+        elf.data.extend_from_slice(&self.text);
 
         let header_text_len = elf.serialized_length();
 

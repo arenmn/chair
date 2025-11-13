@@ -63,6 +63,11 @@ pub struct ElfSymbol {
     pub st_size: u64
 }
 
+pub struct ElfRelocation {
+    pub r_offset: u64,
+    pub r_info: u64
+}
+
 impl Serializable for ElfHeader {
     fn serialize(&self, be: bool) -> Vec<u8> {
         let mut vec = Vec::new();
@@ -158,13 +163,24 @@ impl Serializable for ElfSectionHeader {
     }
 }
 
+impl Serializable for ElfRelocation {
+    fn serialize(&self, be: bool) -> Vec<u8> {
+        let mut vec = vec![];
+
+        add_bytes(&mut vec, self.r_offset, be);
+        add_bytes(&mut vec, self.r_info, be);
+
+        vec
+    }
+}
+
 impl Serializable for ElfFile {
     fn serialize(&self, be: bool) -> Vec<u8> {
         let mut vec = Vec::new();
 
         vec.extend(self.elf_header.serialize(be));
-        vec.extend(self.elf_program_headers.iter().flat_map(|x| x.serialize(be)));
-        vec.extend(self.elf_section_headers.iter().flat_map(|x| x.serialize(be)));
+        vec.extend(self.elf_program_headers.serialize(be));
+        vec.extend(self.elf_section_headers.serialize(be));
         vec.extend(&self.data);
 
         vec
