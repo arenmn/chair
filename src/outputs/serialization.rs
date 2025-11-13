@@ -20,7 +20,7 @@ macro_rules! impl_to_bytes {
     };
 }
 
-impl_to_bytes!(u8, u16, u32, u64);
+impl_to_bytes!(u8, u16, u32, u64, i64);
 
 pub trait Serializable {
     fn serialize(&self, big_endian: bool) -> Vec<u8>;
